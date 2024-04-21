@@ -11,8 +11,10 @@ export const getLessonsList = (timestamp, success ) => {
 }
 
 
-export const getActivityStats = ( lessons_id ) => {
+export const getActivityStats = ( lessons_id, success ) => {
     axios.get(`/api/lessons/${lessons_id}/activity_stats`).then(res => {
-        console.log(res)
+        if (res.status === 200) {
+            success(res.data)
+        }
     })
 }

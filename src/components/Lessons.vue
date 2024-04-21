@@ -1,6 +1,6 @@
 <script setup>
 import {onMounted, reactive, ref} from 'vue'
-import {getLessonsList} from "../api/api.js";
+import {getActivityStats, getLessonsList} from "../api/api.js";
 import {useLessonsListStore} from "../stores/index.js";
 import {formatDate} from "../utils/date.js";
 
@@ -11,12 +11,15 @@ const date = ref(new Date().toDateString())
 const floating = ref(false)
 
 const initLessonData = {
+  id:'',
   title:'',
   provenance:'',
   author: {
     name:'',
   },
-  article:''
+  article:'',
+  comment_count:null,
+  favourite_count:null
 }
 
 const state = reactive({
@@ -57,7 +60,14 @@ const dateChangeHandler = (selectDate) => {
   handleData(Date.parse(selectDate).toString().substring(0,10))
 }
 const showFloating = () => {
+  if (floating.value ) return
   floating.value = true;
+  if (state.lessonData.comment_count == null) {
+    getActivityStats(state.lessonData.id, (data) => {
+      state.lessonData.comment_count = data.comment_count
+      state.lessonData.favourite_count = data.favourite_count
+    })
+  }
 }
 
 </script>
@@ -93,6 +103,22 @@ const showFloating = () => {
             <div class="floating-content-main">
               <var-divider dashed />
               <div class="floating-content" v-for="(item, index) in state.lessonData.article.split('\n')" :id="index" v-html="item === '' ? '<br>' : item"/>
+              <var-divider dashed />
+              <var-space justify="space-around">
+                <var-chip type="info">
+                  {{ state.lessonData.comment_count }}
+                  <template #left>
+                    <var-icon name="chat-processing-outline" />
+                  </template>
+                </var-chip>
+                <var-chip type="danger">
+                  {{ state.lessonData.favourite_count }}
+                  <template #left>
+                    <var-icon name="heart-outline" />
+                  </template>
+                </var-chip>
+              </var-space>
+
             </div>
           </template>
         </var-card>
