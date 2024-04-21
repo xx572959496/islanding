@@ -18,3 +18,19 @@ export const getActivityStats = ( lessons_id, success ) => {
         }
     })
 }
+
+export const getLessonComments = (lessons_id, offset = 0, limit = 256, success) => {
+    axios.get(`/api/lessons/${lessons_id}/comments?offset=${offset}&limit=${limit}`).then(res => {
+        if (res.status === 200) {
+            success(res.data)
+        }
+    })
+}
+
+export const getCommentComments = (comment_id, success) => {
+    axios.get(`/api/comments/${comment_id}/comments`).then(res => {
+        if (res.status === 200) {
+            success(res.data)
+        }
+    })
+}
