@@ -3,6 +3,7 @@ import {onMounted, reactive, ref} from 'vue'
 import {getActivityStats, getCommentComments, getLessonComments, getLessonsList} from "../api/api.js";
 import {useLessonsListStore} from "../stores/index.js";
 import {formatDate, getDateDiff} from "../utils/date.js";
+import {randomArray} from "../utils/array.js";
 
 const defaultAvatarImageUrl = new URL('/public/island.jpg', import.meta.url).href
 
@@ -22,7 +23,8 @@ const initLessonData = {
   article:'',
   comment_count:null,
   favourite_count:null,
-  commentsList:[]
+  commentsList:[],
+  randomCommentList:[]
 }
 
 const state = reactive({
@@ -68,25 +70,23 @@ const showFloating = () => {
   if (floating.value ) return
   if (state.lessonData.id === '') return;
   floating.value = true;
-  if (state.lessonData.comment_count == null) {
-    getActivityStats(state.lessonData.id, (data) => {
-      state.lessonData.comment_count = data.comment_count
-      state.lessonData.favourite_count = data.favourite_count
-    })
-  }
+  getActivityStats(state.lessonData.id, (data) => {
+    state.lessonData.comment_count = data.comment_count
+    state.lessonData.favourite_count = data.favourite_count
+  })
+  getLessonComments(state.lessonData.id, 0, state.lessonData.comment_count, (data) => {
+    state.lessonData.commentsList = data
+    state.randomCommentList = randomArray(state.lessonData.commentsList, 2);
+  })
 }
 const handleCommentClick = () => {
   state.bottomShow = true
-  getLessonComments(state.lessonData.id, 0, state.lessonData.comment_count, (data) => {
-    state.lessonData.commentsList = data
-  })
 }
 
 const handleCommentCommentClick = (item) => {
   state.commentShow = true
   state.commentItem = item
   getCommentComments(item.id, (response) => {
-    console.log(response)
     state.commentItem.reply = response
   })
 }
@@ -127,6 +127,34 @@ const handleCommentCommentClick = (item) => {
               <var-divider dashed />
               <div class="floating-content" v-for="(item, index) in state.lessonData.article.split('\n')" :id="index" v-html="item === '' ? '<br>' : item"/>
               <var-divider dashed />
+              <var-space style="padding: 8px 12px;" direction="column" size="large">
+                <var-card v-for="(item) in state.randomCommentList" :id="item.id" :description="item.content">
+                  <template #title>
+                    <div class="comment-user-info">
+                      <var-avatar size="small" lazy :src="item.user.avatar === '' ? defaultAvatarImageUrl : item.user.avatar" :error="defaultAvatarImageUrl" />
+                      <div class="comment-user-info-name" v-html="item.user.nickname"/>
+                    </div>
+                  </template>
+                  <template #description>
+                    <div class="floating-comment">
+                      <var-ellipsis :tooltip="false" :line-clamp="3" expand-trigger="click" >
+                        <div v-html="item.content.replaceAll('\n','<br>')"></div>
+                      </var-ellipsis>
+                    </div>
+                  </template>
+                  <template #extra>
+                    <div class="floating-comment-extra">
+                      <var-chip size="mini" plain type="info">{{ getDateDiff(new Date(item.created_at * 1000)) }}</var-chip>
+                      <var-button text round>
+                        <var-icon size="small" name="star" /> {{item.like_count}}
+                      </var-button>
+                      <var-button round text @click="handleCommentCommentClick(item)">
+                        <var-icon size="small" name="chat-processing" /> {{item.sub_comment_count}}
+                      </var-button>
+                    </div>
+                  </template>
+                </var-card>
+              </var-space>
               <var-space justify="space-around">
                 <var-button @click="handleCommentClick" type="info">
                   <template #default>
@@ -163,11 +191,8 @@ const handleCommentCommentClick = (item) => {
       <var-card v-for="(item) in state.lessonData.commentsList" :id="item.id" :description="item.content">
         <template #title>
           <div class="comment-user-info">
-            <var-avatar lazy :src="item.user.avatar === '' ? defaultAvatarImageUrl : item.user.avatar" :error="defaultAvatarImageUrl" />
-            <div class="comment-user-info-name">
-              <span>{{item.user.nickname}}</span>
-              <var-badge type="info" :value="getDateDiff(new Date(item.created_at * 1000))" />
-            </div>
+            <var-avatar size="small" lazy :src="item.user.avatar === '' ? defaultAvatarImageUrl : item.user.avatar" :error="defaultAvatarImageUrl" />
+            <div class="comment-user-info-name" v-html="item.user.nickname"/>
           </div>
         </template>
         <template #description>
@@ -179,6 +204,7 @@ const handleCommentCommentClick = (item) => {
         </template>
         <template #extra>
           <div class="floating-comment-extra">
+            <var-chip size="mini" plain type="info">{{ getDateDiff(new Date(item.created_at * 1000)) }}</var-chip>
             <var-button text round>
               <var-icon size="small" name="star" /> {{item.like_count}}
             </var-button>
@@ -193,7 +219,7 @@ const handleCommentCommentClick = (item) => {
 
   <var-popup style="height: 75vh" position="bottom" safe-area safe-area-top v-model:show="state.commentShow">
     <div class="comment-user-info">
-      <var-avatar lazy :src="state.commentItem.user.avatar === '' ? defaultAvatarImageUrl : state.commentItem.user.avatar" :error="defaultAvatarImageUrl" />
+      <var-avatar size="small" lazy :src="state.commentItem.user.avatar === '' ? defaultAvatarImageUrl : state.commentItem.user.avatar" :error="defaultAvatarImageUrl" />
       <div class="comment-user-info-name">
         <span>{{state.commentItem.user.nickname}}</span>
         <var-badge type="info" :value="getDateDiff(new Date(state.commentItem.created_at * 1000))" />
@@ -204,9 +230,9 @@ const handleCommentCommentClick = (item) => {
     </div>
     <var-chip>{{ state.commentItem.sub_comment_count }} 评论</var-chip>
     <div class="comment-comment-main" v-for="item in state.commentItem.reply">
-      <var-avatar size="small" lazy :src="item.user.avatar === '' ? defaultAvatarImageUrl : item.user.avatar" :error="defaultAvatarImageUrl" />
+      <var-avatar size="mini" lazy :src="item.user.avatar === '' ? defaultAvatarImageUrl : item.user.avatar" :error="defaultAvatarImageUrl" />
       <var-paper class="comment-comment-content">
-        <div class="comment-comment-username" v-html="item.user.nickname"/>
+        <div class="comment-comment-username" v-html="item.reply_to.id === '' ? item.user.nickname : `${item.user.nickname} 回复 <b>${item.reply_to.user_nickname}</b> ：`"/>
         <div class="comment-comment-reply" v-html="item.content"/>
       </var-paper>
     </div>
@@ -229,9 +255,6 @@ const handleCommentCommentClick = (item) => {
   font-size: var(--font-size-lg);
   line-height: 2;
   text-indent: 2em;
-}
-div#\30 {
-  padding-top: 12px;
 }
 .floating-content-main {
   padding-bottom: 60px;
@@ -256,6 +279,7 @@ div#\30 {
   white-space: break-spaces;
 }
 .comment-user-info-name {
+  color: var(--card-title-color);
   display: flex;
   flex-direction: row;
   gap: 8px;
@@ -279,7 +303,10 @@ div#\30 {
 }
 
 .floating-comment-extra {
-  color: var(--card-title-color)
+  color: var(--card-title-color);
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .comment-comment-username {
