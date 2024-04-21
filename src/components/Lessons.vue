@@ -44,9 +44,14 @@ const handleData = (date) => {
   getLessonsList(date, (data) => {
     lessonsListStore.lessonsList = data
     const nowDate = formatDate(new Date(date * 1000));
-    state.lessonData = lessonsListStore.lessonsList.find(item => {
+    const findItem = lessonsListStore.lessonsList.find(item => {
       return item.date_by_day.toString() === nowDate.toString()
     })
+    if (findItem == null) {
+      handleData(date - 7 * 24 * 60 * 60)
+      return
+    }
+    state.lessonData = findItem
     state.loading = false
   })
 }
@@ -220,20 +225,24 @@ const handleCommentCommentClick = (item) => {
   <var-popup style="height: 75vh" position="bottom" safe-area safe-area-top v-model:show="state.commentShow">
     <div class="comment-user-info">
       <var-avatar size="small" lazy :src="state.commentItem.user.avatar === '' ? defaultAvatarImageUrl : state.commentItem.user.avatar" :error="defaultAvatarImageUrl" />
-      <div class="comment-user-info-name">
-        <span>{{state.commentItem.user.nickname}}</span>
-        <var-badge type="info" :value="getDateDiff(new Date(state.commentItem.created_at * 1000))" />
-      </div>
+      <div class="comment-user-info-name" v-html="state.commentItem.user.nickname"/>
     </div>
     <div class="floating-comment">
       <div v-html="state.commentItem.content.replaceAll('\n','<br>')"></div>
     </div>
-    <var-chip>{{ state.commentItem.sub_comment_count }} 评论</var-chip>
+    <div class="comment-comment-reply-message">
+      <var-chip size="mini">{{ state.commentItem.sub_comment_count }} 评论</var-chip>
+      <var-chip size="mini" plain type="info">{{ getDateDiff(new Date(state.commentItem.created_at * 1000)) }}</var-chip>
+    </div>
+
     <div class="comment-comment-main" v-for="item in state.commentItem.reply">
       <var-avatar size="mini" lazy :src="item.user.avatar === '' ? defaultAvatarImageUrl : item.user.avatar" :error="defaultAvatarImageUrl" />
       <var-paper class="comment-comment-content">
         <div class="comment-comment-username" v-html="item.reply_to.id === '' ? item.user.nickname : `${item.user.nickname} 回复 <b>${item.reply_to.user_nickname}</b> ：`"/>
         <div class="comment-comment-reply" v-html="item.content"/>
+        <div class="comment-comment-reply-time">
+          <var-chip size="mini" plain type="info">{{ getDateDiff(new Date(item.created_at * 1000)) }}</var-chip>
+        </div>
       </var-paper>
     </div>
   </var-popup>
@@ -322,5 +331,11 @@ const handleCommentCommentClick = (item) => {
   word-break: break-all;
   transition: padding .25s, margin .25s, font-size .25s;
   white-space: break-spaces;
+}
+.comment-comment-reply-time {
+  text-align: right;
+}
+.comment-comment-reply-message {
+  padding: 8px 12px;
 }
 </style>
