@@ -4,6 +4,7 @@ import {getActivityStats, getCommentComments, getLessonComments, getLessonsList}
 import {useLessonsListStore} from "../stores/index.js";
 import {formatDate, getDateDiff} from "../utils/date.js";
 import {randomArray} from "../utils/array.js";
+import {isMobile, isSafari} from "../utils/navigator.js";
 
 const defaultAvatarImageUrl = new URL('/public/island.jpg', import.meta.url).href
 
@@ -24,7 +25,7 @@ const initLessonData = {
   comment_count:null,
   favourite_count:null,
   commentsList:[],
-  randomCommentList:[]
+  randomCommentList:[],
 }
 
 const state = reactive({
@@ -32,7 +33,8 @@ const state = reactive({
   loading: true,
   bottomShow:false,
   commentShow:false,
-  commentItem:null
+  commentItem:null,
+  safariBrowser: isMobile() && isSafari()
 })
 
 onMounted(() => {
@@ -132,8 +134,8 @@ const handleCommentCommentClick = (item) => {
               <var-divider dashed />
               <div class="floating-content" v-for="(item, index) in state.lessonData.article.split('\n')" :id="index" v-html="item === '' ? '<br>' : item"/>
               <var-divider dashed />
-              <var-space style="padding: 8px 12px;" direction="column" size="large">
-                <var-card v-for="(item) in state.randomCommentList" :id="item.id" :description="item.content">
+              <var-space style="padding: 12px" direction="column" size="large">
+                <var-card :elevation="false" v-for="(item) in state.randomCommentList" :id="item.id" :description="item.content">
                   <template #title>
                     <div class="comment-user-info">
                       <var-avatar size="small" lazy :src="item.user.avatar === '' ? defaultAvatarImageUrl : item.user.avatar" :error="defaultAvatarImageUrl" />
@@ -160,7 +162,7 @@ const handleCommentCommentClick = (item) => {
                   </template>
                 </var-card>
               </var-space>
-              <var-space justify="space-around">
+              <var-space :class="state.safariBrowser ? 'floating-comment-safari-browser' : ''" justify="space-around">
                 <var-button @click="handleCommentClick" type="info">
                   <template #default>
                     <var-icon name="chat-processing-outline" /><span class="pl-[8px]">{{ state.lessonData.comment_count }}</span>
@@ -192,8 +194,8 @@ const handleCommentCommentClick = (item) => {
         </var-button>
       </template>
     </var-app-bar>
-    <var-space style="margin-top: var(--app-bar-height);padding: 12px;" direction="column">
-      <var-card v-for="(item) in state.lessonData.commentsList" :id="item.id" :description="item.content">
+    <var-space :class="state.safariBrowser ? 'comment-safari-browser' : ''"  style="margin: 64px 12px 12px;" direction="column">
+      <var-card :elevation="4" v-for="(item) in state.lessonData.commentsList" :id="item.id" :description="item.content">
         <template #title>
           <div class="comment-user-info">
             <var-avatar size="small" lazy :src="item.user.avatar === '' ? defaultAvatarImageUrl : item.user.avatar" :error="defaultAvatarImageUrl" />
@@ -301,7 +303,7 @@ const handleCommentCommentClick = (item) => {
 }
 .comment-comment-content {
   flex: 1;
-  padding: 12px;
+  padding: 0 8px;
 }
 
 .comment-user-info-name span {
@@ -319,7 +321,7 @@ const handleCommentCommentClick = (item) => {
 }
 
 .comment-comment-username {
-  font-size: var(--card-title-font-size);
+  font-size: var(--font-size-lg);
   color: var(--card-title-color);
   word-break: break-word;
   transition: padding .25s, margin .25s, font-size .25s;
@@ -337,5 +339,14 @@ const handleCommentCommentClick = (item) => {
 }
 .comment-comment-reply-message {
   padding: 8px 12px;
+  display: flex;
+  gap: 12px;
+}
+
+.floating-comment-safari-browser {
+  padding-bottom: 72px;
+}
+.comment-safari-browser {
+  padding: 84px 0 0;
 }
 </style>

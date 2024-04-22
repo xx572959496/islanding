@@ -27,17 +27,17 @@ export const getDateDiff = (dateTimeStamp) => {
     const hourC = diffValue / hour;
     const minC = diffValue / minute;
     if (yearC >= 1) {
-        result = "" + parseInt(yearC) + "年前";
+        result = "" + parseInt(yearC.toString()) + "年前";
     } else if (monthC >= 1) {
-        result = "" + parseInt(monthC) + "月前";
+        result = "" + parseInt(monthC.toString()) + "月前";
     } else if (weekC >= 1) {
-        result = "" + parseInt(weekC) + "周前";
+        result = "" + parseInt(weekC.toString()) + "周前";
     } else if (dayC >= 1) {
-        result = "" + parseInt(dayC) + "天前";
+        result = "" + parseInt(dayC.toString()) + "天前";
     } else if (hourC >= 1) {
-        result = "" + parseInt(hourC) + "小时前";
+        result = "" + parseInt(hourC.toString()) + "小时前";
     } else if (minC >= 1) {
-        result = "" + parseInt(minC) + "分钟前";
+        result = "" + parseInt(minC.toString()) + "分钟前";
     } else
         result = "刚刚";
     return result;

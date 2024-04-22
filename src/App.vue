@@ -1,15 +1,14 @@
 <script setup>
-import {onMounted, ref} from "vue";
+import {ref} from "vue";
 import Lessons from "./components/Lessons.vue";
 import Recommends from "./components/Recommends.vue";
 import UserPage from "./components/UserPage.vue";
-import {StyleProvider, Themes} from "@varlet/ui";
 
 const active = ref(1)
 
-onMounted( () => {
-  StyleProvider(Themes.md3Light)
-})
+// onMounted( () => {
+//   StyleProvider(Themes.md3Light)
+// })
 </script>
 
 <template>
