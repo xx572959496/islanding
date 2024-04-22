@@ -14,6 +14,12 @@
   color: var(--color-text);
 }
 
+body {
+  transition: background-color .25s, color .25s;
+  color: var(--color-text);
+  background-color: var(--paper-background);
+}
+
 #app {
   max-width: 60vh;
   margin: 0 auto;

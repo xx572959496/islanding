@@ -4,7 +4,7 @@ import {getActivityStats, getCommentComments, getLessonComments, getLessonsList}
 import {useLessonsListStore} from "../stores/index.js";
 import {formatDate, getDateDiff} from "../utils/date.js";
 import {randomArray} from "../utils/array.js";
-import {isMobile, isSafari} from "../utils/navigator.js";
+import {Snackbar} from "@varlet/ui";
 
 const defaultAvatarImageUrl = new URL('/public/island.jpg', import.meta.url).href
 
@@ -34,7 +34,7 @@ const state = reactive({
   bottomShow:false,
   commentShow:false,
   commentItem:null,
-  safariBrowser: isMobile() && isSafari()
+  sortBy:'time'
 })
 
 onMounted(() => {
@@ -54,8 +54,13 @@ const handleData = (date) => {
       return
     }
     state.lessonData = findItem
-    state.loading = false
+    getActivityStats(findItem.id, (data) => {
+      state.lessonData.comment_count = data.comment_count
+      state.lessonData.favourite_count = data.favourite_count
+      state.loading = false
+    })
   })
+
 }
 
 const dateChangeHandler = (selectDate) => {
@@ -68,7 +73,11 @@ const dateChangeHandler = (selectDate) => {
   if (findItem != null) {
     // findItem.article = findItem.article.trim().replace(/\n/g, '<br/>')
     state.lessonData = findItem
-    state.loading = false
+    getActivityStats(findItem.id, (data) => {
+      state.lessonData.comment_count = data.comment_count
+      state.lessonData.favourite_count = data.favourite_count
+      state.loading = false
+    })
     return
   }
   handleData(Date.parse(selectDate).toString().substring(0,10))
@@ -97,7 +106,19 @@ const handleCommentCommentClick = (item) => {
     state.commentItem.reply = response
   })
 }
-
+const handleSortComment = () => {
+  if (state.sortBy === 'time') {
+    state.sortBy = 'hot'
+    state.lessonData.commentsList = state.lessonData.commentsList.sort((item1,item2) => {
+      return (item2.like_count + item2.sub_comment_count) - (item1.like_count + item1.sub_comment_count)
+    })
+  }else {
+    state.sortBy = 'time'
+    state.lessonData.commentsList = state.lessonData.commentsList.sort((item1,item2) => {
+      return (item2.created_at) - (item1.created_at)
+    })
+  }
+}
 </script>
 
 <template>
@@ -128,6 +149,12 @@ const handleCommentCommentClick = (item) => {
                 <div class="description" v-html="state.lessonData.article"/>
               </var-ellipsis>
             </var-skeleton>
+          </template>
+          <template #extra>
+            <div class="floating-comment-extra">
+              <var-chip plain size="small">{{ state.lessonData.favourite_count }} 喜欢</var-chip>
+              <var-chip plain size="small">{{ state.lessonData.comment_count }} 想法</var-chip>
+            </div>
           </template>
           <template #floating-content>
             <div class="floating-content-main">
@@ -161,40 +188,39 @@ const handleCommentCommentClick = (item) => {
                     </div>
                   </template>
                 </var-card>
-              </var-space>
-              <var-space :class="state.safariBrowser ? 'floating-comment-safari-browser' : ''" justify="space-around">
-                <var-button @click="handleCommentClick" type="info">
-                  <template #default>
-                    <var-icon name="chat-processing-outline" /><span class="pl-[8px]">{{ state.lessonData.comment_count }}</span>
-                  </template>
-                </var-button>
-                <var-button type="danger">
-                  <template #default>
-                    <var-icon name="heart-outline" /><span class="pl-[8px]">{{ state.lessonData.favourite_count }}</span>
-                  </template>
-                </var-button>
+                <var-button @click="handleCommentClick" type="info" text>全部 {{ state.lessonData.comment_count }} 条想法</var-button>
               </var-space>
             </div>
+          </template>
+          <template #close-button>
+            <var-space>
+              <var-button size="large" @click.stop="Snackbar.info('功能还在建设中。。')" round><var-icon color="red" name="heart-outline" /></var-button>
+              <var-button @click.stop="floating = false" type="danger" size="large" round><var-icon name="window-close" /></var-button>
+            </var-space>
           </template>
         </var-card>
       </var-col>
     </var-row>
   </var-space>
-  <var-popup style="height: 100vh" position="bottom" safe-area safe-area-top v-model:show="state.bottomShow">
-    <var-app-bar fixed safe-area-top title="想法" >
-      <template #left>
-        <var-button
-            @click="state.bottomShow = false"
-            color="transparent"
-            text-color="#fff"
-            round
-            text
-        >
-          <var-icon name="chevron-left" :size="24" />
-        </var-button>
-      </template>
-    </var-app-bar>
-    <var-space :class="state.safariBrowser ? 'comment-safari-browser' : ''"  style="margin: 64px 12px 12px;" direction="column">
+  <var-popup style="height: 100%;background: linear-gradient(50deg, rgb(213, 240, 235), rgb(196, 216, 237))" position="bottom" safe-area safe-area-top v-model:show="state.bottomShow">
+    <div class="comment-list-main-top">
+      <var-button
+          @click="state.bottomShow = false"
+          round
+          text >
+        <var-icon name="chevron-left" :size="24" />
+      </var-button>
+      <var-chip type="success" >
+        {{state.lessonData.title}}
+      </var-chip>
+      <var-button
+          @click="handleSortComment"
+          round
+          text >
+        <var-icon name="format-list-checkbox" :size="24" />{{state.sortBy === 'time' ? '时间' : '热度'}}
+      </var-button>
+    </div>
+    <var-space class="comment-list-main-space" direction="column">
       <var-card :elevation="4" v-for="(item) in state.lessonData.commentsList" :id="item.id" :description="item.content">
         <template #title>
           <div class="comment-user-info">
@@ -213,7 +239,7 @@ const handleCommentCommentClick = (item) => {
           <div class="floating-comment-extra">
             <var-chip size="mini" plain type="info">{{ getDateDiff(new Date(item.created_at * 1000)) }}</var-chip>
             <var-button text round>
-              <var-icon size="small" name="star" /> {{item.like_count}}
+              <var-icon @click.stop="Snackbar.info('功能还在建设中。。')" size="small" name="star" /> {{item.like_count}}
             </var-button>
             <var-button round text @click="handleCommentCommentClick(item)">
               <var-icon size="small" name="chat-processing" /> {{item.sub_comment_count}}
@@ -317,7 +343,8 @@ const handleCommentCommentClick = (item) => {
   color: var(--card-title-color);
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 8px;
+  padding-top: 12px;
 }
 
 .comment-comment-username {
@@ -343,10 +370,20 @@ const handleCommentCommentClick = (item) => {
   gap: 12px;
 }
 
-.floating-comment-safari-browser {
-  padding-bottom: 72px;
+.comment-list-main-space {
+  padding-top: 32px;
+  margin: 12px;
 }
-.comment-safari-browser {
-  padding: 84px 0 0;
+.comment-list-main-top {
+  z-index: 99;
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
 }
 </style>

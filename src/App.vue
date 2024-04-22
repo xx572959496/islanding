@@ -1,14 +1,23 @@
 <script setup>
-import {ref} from "vue";
+import {ref, onMounted} from "vue";
 import Lessons from "./components/Lessons.vue";
 import Recommends from "./components/Recommends.vue";
 import UserPage from "./components/UserPage.vue";
 
+import { StyleProvider } from '@varlet/ui'
+
+const customerTheme = {
+  '--color-primary': '#C4D8ED',
+  '--date-picker-title-color':'var(--date-picker-main-color)',
+  '--button-primary-color':'var(--date-picker-main-color)',
+  '--bottom-navigation-item-active-color':'#7f95ab'
+}
+
 const active = ref(1)
 
-// onMounted( () => {
-//   StyleProvider(Themes.md3Light)
-// })
+onMounted( () => {
+  StyleProvider(customerTheme)
+})
 </script>
 
 <template>
