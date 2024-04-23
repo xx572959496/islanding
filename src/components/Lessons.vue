@@ -6,6 +6,7 @@ import {formatDate, getDateDiff} from "../utils/date.js";
 import {randomArray} from "../utils/array.js";
 import {Snackbar} from "@varlet/ui";
 
+
 const defaultAvatarImageUrl = new URL('/public/island.jpg', import.meta.url).href
 
 const lessonsListStore = useLessonsListStore()
@@ -162,7 +163,7 @@ const handleSortComment = () => {
               <div class="floating-content" v-for="(item, index) in state.lessonData.article.split('\n')" :id="index" v-html="item === '' ? '<br>' : item"/>
               <var-divider dashed />
               <var-space style="padding: 12px" direction="column" size="large">
-                <var-card :elevation="false" v-for="(item) in state.randomCommentList" :id="item.id" :description="item.content">
+                <var-card :elevation="false" v-for="(item) in state.randomCommentList" :id="item.id">
                   <template #title>
                     <div class="comment-user-info">
                       <var-avatar size="small" lazy :src="item.user.avatar === '' ? defaultAvatarImageUrl : item.user.avatar" :error="defaultAvatarImageUrl" />
@@ -221,7 +222,7 @@ const handleSortComment = () => {
       </var-button>
     </div>
     <var-space class="comment-list-main-space" direction="column">
-      <var-card :elevation="4" v-for="(item) in state.lessonData.commentsList" :id="item.id" :description="item.content">
+      <var-card :elevation="4" v-for="(item) in state.lessonData.commentsList" :id="item.id" >
         <template #title>
           <div class="comment-user-info">
             <var-avatar size="small" lazy :src="item.user.avatar === '' ? defaultAvatarImageUrl : item.user.avatar" :error="defaultAvatarImageUrl" />
@@ -301,36 +302,11 @@ const handleSortComment = () => {
   align-items: center;
   gap: 4vh;
 }
-.comment-user-info {
-  padding: 12px 12px 0;
-  display: flex;
-  align-items: center;
-  gap: 1vh;
-}
-.floating-comment {
-  padding: 8px 12px;
-  font-size: var(--card-description-font-size);
-  color: var(--card-description-color);
-  word-break: break-all;
-  transition: padding .25s, margin .25s, font-size .25s;
-  white-space: break-spaces;
-}
-.comment-user-info-name {
-  color: var(--card-title-color);
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-  align-items: center;
-}
-.comment-comment-main{
-  padding: 8px 12px;
-  display: flex;
-  gap: 8px;
-}
-.comment-comment-content {
-  flex: 1;
-  padding: 0 8px;
-}
+
+
+
+
+
 
 .comment-user-info-name span {
   font-size: var(--card-title-font-size);
@@ -345,29 +321,6 @@ const handleSortComment = () => {
   align-items: center;
   gap: 8px;
   padding-top: 12px;
-}
-
-.comment-comment-username {
-  font-size: var(--font-size-lg);
-  color: var(--card-title-color);
-  word-break: break-word;
-  transition: padding .25s, margin .25s, font-size .25s;
-}
-
-.comment-comment-reply {
-  font-size: var(--card-description-font-size);
-  color: var(--card-description-color);
-  word-break: break-all;
-  transition: padding .25s, margin .25s, font-size .25s;
-  white-space: break-spaces;
-}
-.comment-comment-reply-time {
-  text-align: right;
-}
-.comment-comment-reply-message {
-  padding: 8px 12px;
-  display: flex;
-  gap: 12px;
 }
 
 .comment-list-main-space {

@@ -25,7 +25,9 @@ onMounted( () => {
     <keep-alive>
       <lessons v-if="active === 1"/>
     </keep-alive>
-    <Recommends v-if="active === 0"/>
+    <keep-alive>
+      <Recommends v-if="active === 0"/>
+    </keep-alive>
     <UserPage v-if="active === 2" />
   </div>
   <var-bottom-navigation safe-area fixed v-model:active="active">

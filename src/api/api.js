@@ -34,3 +34,19 @@ export const getCommentComments = (comment_id, success) => {
         }
     })
 }
+
+export const getTodayRecommends = (success) => {
+    axios.get(`/api/today_recommends`).then(res => {
+        if (res.status === 200) {
+            success(res.data)
+        }
+    })
+}
+
+export const getLessonsAbstract = (lessons_id, success) => {
+    axios.get(`/api/lessons/${lessons_id}`).then(res => {
+        if (res.status === 200) {
+            success(res.data)
+        }
+    })
+}
